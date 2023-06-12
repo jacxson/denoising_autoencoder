@@ -25,7 +25,6 @@ class Splitter:
         for audio_file in os.listdir(directory):
             if 'DS_Store' not in audio_file:
                 file_path = os.path.join(directory, audio_file)
-                print(f"processing file: {file_path}")
                 signal, sr = self._load_audio_file(file_path)
                 if self._is_resample_necessary(sr):
                     signal = self._resample_audio(signal, sr)
@@ -64,7 +63,6 @@ class Splitter:
         https://stackoverflow.com/a/60115003
         """
         signal_len = len(signal)
-        print(f"total samples: {signal_len}")
         slice_start = 0
         threshold = self.target_length / 2
         audio_slices = []
@@ -75,7 +73,8 @@ class Splitter:
             if slice_end > signal_len:
                 audio_slice = signal[slice_start:]
                 audio_slice = self._apply_padding(audio_slice)
-            audio_slice = signal[slice_start:slice_end]
+            else:
+                audio_slice = signal[slice_start:slice_end]
             
             audio_slices.append(audio_slice)
             slice_start = slice_end
@@ -110,25 +109,4 @@ class Splitter:
                 
             save_file_path = os.path.join(save_dir, save_file_name)
             sf.write(save_file_path, audio_slice, self.target_sr)
-            print(f"saved file: {save_file_path}")
     
-
-
-if __name__ == "__main__":
-    
-    SAMPLE_RATE = 22_050
-    TARGET_LENGTH = 2**16 # Measured in samples
-    
-    AUDIO_SAMPLE_DIR = "./audio/guitar_samples"
-    SAMPLE_SAVE_DIR = "./audio/guitar_2s"
-    
-    HARMONIC_NOISE_DIR =  "./audio/harm_noise"
-    ENV_NOISE_DIR = "./audio/esc_50"
-    NOISE_SAVE_DIR = "./audio/noise_2s"
-    
-    
-    
-    splitter = Splitter(SAMPLE_RATE, TARGET_LENGTH)
-    splitter.process_audio_files(AUDIO_SAMPLE_DIR, SAMPLE_SAVE_DIR)
-    splitter.process_audio_files(HARMONIC_NOISE_DIR, NOISE_SAVE_DIR)
-    splitter.process_audio_files(ENV_NOISE_DIR, NOISE_SAVE_DIR)
