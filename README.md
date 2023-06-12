@@ -67,9 +67,6 @@ I consulted a variety of sources to familiarize myself with autoencoders, but be
 ### Time - Frequency Modeling
 The initial model was tra
 
-### Phase Modeling
-
-# Results
 
 ### Measuring Success
 Working with audio data necessitates a combination of quantitative and qualitative (objective and subjective) assessment to measure the performance of a denoising model. The core metric that I used to train my model and compare the performance of different model architectures was the mean squared error of the predicted spectrogram of clean audio compared to the spectrogram of the actual original clean audio. While this measure is convenient in its ease of use and of interpretability, it suffers from a lack of phase-awareness [as described in this paper](https://openreview.net/pdf?id=SkeRTsAcYm). Since I planned to model phase in other ways, I decided that I would stick with a simpler loss term and error metric for this phase of the project. While it is difficult to translate mean squared error into the presence of audible artifacts, I am aiming for an mse below 0.001 on my testing data, as that predicted audio below that threshold has sounded acceptable to me.
