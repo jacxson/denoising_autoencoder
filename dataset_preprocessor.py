@@ -8,15 +8,14 @@ import pandas as pd
 
 
 
+# based on a similar spectrogram extractor found here:
+# https://github.com/musikalkemist/generating-sound-with-neural-networks/blob/main/12%20Preprocessing%20pipeline/preprocess.py
 
 class PolarSpectrogramExtractor:
     """
     Extracts 2-Channel Spectrograms from an audio signal using the short time
-    fourier transform. Default setting assigns the log magnitude spectrogram to
-    the first channel and the angle in radians to the second channel. 
-    Alternatively, the magnitude and phase spectrograms can be assigned to the 
-    first and second channel or real and imaginary components can be assinged
-    to the first and second channel respectively.
+    fourier transform assigning the log magnitude (db) spectrogram to the first
+    channel and the angle in radians to the second channel. 
     """
 
     def __init__(self, frame_size, 
@@ -149,139 +148,7 @@ class PolarSpectrogramExtractor:
         return theta
     
     
-    
-class ComplexSpectrogramExtractor:
-    """
-    Extracts 2-Channel Spectrograms from an audio signal using the short time
-    fourier transform. Default setting assigns the log magnitude spectrogram to
-    the first channel and the angle in radians to the second channel. 
-    Alternatively, the magnitude and phase spectrograms can be assigned to the 
-    first and second channel or real and imaginary components can be assinged
-    to the first and second channel respectively.
-    """
 
-    def __init__(self, frame_size, 
-                 hop_length, 
-                 real_minmax=[-100,100], 
-                 imag_minmax=[-3.1415925, 3.1415925], 
-                 target_minmax=[0, 1]):
-        
-        self.frame_size = frame_size
-        self.hop_length = hop_length
-        self.target_min = target_minmax[0]
-        self.target_max = target_minmax[1]
-        self.real_min = real_minmax[0]
-        self.real_max = real_minmax[1]
-        self.imag_min = imag_minmax[0]
-        self.imag_max = imag_minmax[1]
-        
-    def extract(self, signal):
-        
-        stft = self.stft(signal)
-        real = stft.real
-        imag = stft.imag
-        formatted_spectrogram = self.format_spectrogram(real, imag)
-        norm_spec = self.normalize(formatted_spectrogram)
-
-        return norm_spec
-    
-    def recover_signal(self, formatted_spectrogram):
-        stft = self.recover_stft(formatted_spectrogram)
-        signal = self.istft(stft)
-        
-        return signal
-    
-    def recover_stft(self, formatted_spectrogram):
-
-        spec = self.denormalize(formatted_spectrogram)
-        real = spec[...,0]
-        imag = spec[...,1]
-        stft = self._complex_to_stft(rho, theta)
-        
-        return stft
-    
-    def stft(self, signal):
-        
-        spectrogram = librosa.stft(signal,
-                                   n_fft=self.frame_size,
-                                   hop_length=self.hop_length)[:-1, :-1]
-        return spectrogram
-    
-    def istft(self, spectrogram):
-        
-        signal = librosa.istft(spectrogram, 
-                               n_fft=self.frame_size, 
-                               hop_length=self.hop_length)
-        
-        return signal
-    
-    def format_spectrogram(self, real, imag):
-        
-        formatted_spectrogram = np.stack([real, imag], axis=2)
-        return formatted_spectrogram
-
-        return rho, theta
-
-    def _complex_to_stft(self, real, imag):
-        
-        imag = imag * 1j
-        stft = real + imag
-
-        return stft
-    
-    def normalize(self, spectrogram):
-        
-        real = spectrogram[...,0]
-        imag = spectrogram[...,1]
-        
-        norm_real = self._normalize_real(real)
-        norm_imag = self._normalize_imag(imag)
-        norm_spec = np.stack([norm_real, norm_imag], axis=2)
-        
-        return norm_spec
-    
-    def _normalize_rho(self, real):
-        
-        norm_real = ((real - self.real_min) / 
-                    (self.real_max - self.real_min))
-        norm_real = (norm_real * (self.target_max - self.target_min) 
-                    + self.target_min)
-        return norm_real
-    
-    def _normalize_theta(self, imag):
-        
-        norm_imag = ((imag - self.imag_min) / 
-                    (self.imag_max - self.imag_min))
-        norm_imag = (norm_imag * (self.timag_max - self.timag_min) 
-                    + self.timag_min)
-        return norm_imag
-    
-    def denormalize(self, normalized_spectrogram):
-        
-        norm_real = normalized_spectrogram[...,0]
-        norm_imag = normalized_spectrogram[...,1]
-        
-        real = self._denormalize_rho(norm_real)
-        imag = self._denormalize_theta(norm_imag)
-        spec = np.stack([real, imag], axis=2)
-        
-        return spec
-        
-    def _denormalize_rho(self, norm_real):
-        
-        real = ((norm_real - self.target_min) / 
-               (self.target_max - self.target_min))
-        real = (real * (self.real_max - self.real_min) + self.real_min)
-        return real
-    
-    def _denormalize_theta(self, norm_imag):
-        
-        imag = ((norm_timag - self.target_min) / 
-               (self.target_max - self.target_min))
-        imag = (timag * (self.timag_max - self.timag_min) + self.timag_min)
-        return timag    
-    
-    
     
 class AudioDatasetFromCSV:
     def __init__(self, 
@@ -311,10 +178,9 @@ class AudioDatasetFromCSV:
             self.metadata = pd.read_csv(self.metadata_csv, index_col="Unnamed: 0")
             print(
                 """
-                Dataset has already been prepared. To load spectrograms,
-                call the load_data() method. To rerun the prepare_dataset()
-                method, you must first set the 'prepared' attribute to be 
-                False.
+                Dataset has already been prepared. To finish preparing data for
+                training use dataset.train_test_split(). To rerun dataset preparation, 
+                you must first set the 'prepared' attribute to False.
                 """)
     def train_test_split(self):
     
